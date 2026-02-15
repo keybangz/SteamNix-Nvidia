@@ -54,7 +54,7 @@
   boot.loader.limine.maxGenerations    = 5;
   hardware.amdgpu.initrd.enable = false;
 
-  boot.kernelParams = [ "quiet nvidia.NVreg_TemporaryFilePath=/var/tmp" ];
+  boot.kernelParams = [ "quiet" "nvidia.NVreg_TemporaryFilePath=/var/tmp" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernel.sysctl = {
     "kernel.split_lock_mitigate" = 0;
