@@ -13,6 +13,7 @@
   ];
   hardware.nvidia.open = true;
   hardware.nvidia.powerManagement.enable = true;
+  hardware.nvidia.forceFullCompositionPipeline = true;
 
   hardware.nvidia.prime = {
     # nix shell nixpkgs#pciutils -c lspci -D -d ::03xx
@@ -29,6 +30,7 @@
         enable = lib.mkForce true;
         enableOffloadCmd = lib.mkForce true;
       };
+
       sync.enable = lib.mkForce false;
     };
   };
@@ -37,11 +39,8 @@
     system.nixos.tags = [ "tv-mode" ];
 
     hardware.nvidia.prime = {
-      offload = {
-        enable = lib.mkForce false;
-        enableOffloadCmd = lib.mkForce false;
-      };
-      sync.enable = true;
+      offload.enable = lib.mkForce false;
+      reverseSync.enable = lib.mkForce true;
     };
   };
  
