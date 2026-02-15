@@ -83,6 +83,12 @@ nixos-generate-config --root /mnt
 curl -L -o /mnt/etc/nixos/configuration.nix 'https://raw.githubusercontent.com/keybangz/SteamNix-Nvidia/refs/heads/main/configuration.nix'
 curl -L -o /mnt/etc/nixos/flake.nix 'https://raw.githubusercontent.com/keybangz/SteamNix-Nvidia/refs/heads/main/flake.nix'
 
+echo "Clearing Nix cache to fix potential corrupted downloads..."
+# Delete any existing corrupted jupiter files from the store
+nix-store --delete --ignore-liveness /nix/store/*jupiter-hw-support* 2>/dev/null || true
+# Clear the general download cache
+rm -rf /root/.cache/nix
+
 echo "Initializing git repository for flake evaluation..."
 # Flakes require a git repository to track file hashes correctly
 cd /mnt/etc/nixos
@@ -95,6 +101,8 @@ echo "Installing NixOS..."
 # Since we are running as root (via sudo), this handles permissions correctly
 export NIX_CONFIG="experimental-features = flakes"
 export NIX_PATH="nixpkgs=/root/.nix-defexpr/channels/nixos"
+
+# Run the install
 nixos-install --flake /mnt/etc/nixos/flake.nix#nixos --no-root-password
 
 echo "Installation complete. You can now reboot."
