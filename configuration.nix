@@ -120,7 +120,7 @@
     steam.enable = true;
     steam.autoStart = true;
     steam.user = "steamos";
-    hardware.has.amd.gpu = true;
+    # hardware.has.amd.gpu = true;
     decky-loader.enable = true;
     steamos.useSteamOSConfig = true;
     steam.desktopSession = "cosmic";
@@ -149,7 +149,7 @@
     PROTON_USE_NTSYNC       = "1";
     ENABLE_HDR_WSI          = "1";
     DXVK_HDR                = "1";
-    PROTON_ENABLE_AMD_AGS   = "1";
+    # PROTON_ENABLE_AMD_AGS   = "1";
     PROTON_ENABLE_NVAPI     = "1";
     ENABLE_GAMESCOPE_WSI    = "1";
     STEAM_MULTIPLE_XWAYLANDS = "1";
