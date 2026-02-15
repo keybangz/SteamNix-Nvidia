@@ -56,8 +56,14 @@ mkfs.btrfs -L nixos "${part_prefix}2"
 
 # --- Mounting ---
 echo "Mounting filesystems..."
+
+# ENCRYPTION TEMPLATE
+# cryptsetup luksFormat "${part_prefix}2"
+# cryptsetup open "${part_prefix}2" enc
+
 # Mount the mapper device (decrypted), not the raw partition
-mount -t btrfs /dev/mapper/enc /mnt
+# NEW: Mount the actual partition, cryptsetup is required if encryption is required
+mount -t btrfs "${part_prefix}2" /mnt
 
 mkdir -p /mnt/boot
 mount "${part_prefix}1" /mnt/boot
