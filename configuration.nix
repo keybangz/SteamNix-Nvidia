@@ -6,15 +6,13 @@
       ./hardware-configuration.nix
     ];
 
-  {
-    hardware.graphics.enable = true;
-    services.xserver.videoDrivers = [
-      "modesetting"
-      "nvidia"
-    ];
-    hardware.nvidia.open = true;
-    hardware.nvidia.powerManagement.enable = true;
-  };
+  hardware.graphics.enable = true;
+  services.xserver.videoDrivers = [
+    "modesetting"
+    "nvidia"
+  ];
+  hardware.nvidia.open = true;
+  hardware.nvidia.powerManagement.enable = true;
 
   specialisation.laptop-mode.configuration = {
     system.nixos.tags = [ "laptop-mode" ];
@@ -24,7 +22,7 @@
         enable = lib.mkForce true;
         enableOffloadCmd = lib.mkForce true;
       };
-      sync.enable = lib.mkForce true;
+      sync.enable = lib.mkForce false;
     };
   };
 
@@ -33,7 +31,7 @@
 
     hardware.nvidia.prime = {
       offload = {
-        enable = lib.mkForce true;
+        enable = lib.mkForce false;
         enableOffloadCmd = lib.mkForce false;
       };
       sync.enable = true;
