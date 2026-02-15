@@ -52,7 +52,7 @@ sleep 2
 # --- Filesystems ---
 echo "Formatting filesystems..."
 mkfs.fat -F32 "${part_prefix}1"
-mkfs.btrfs -L nixos "${part_prefix}2
+mkfs.btrfs -L nixos "${part_prefix}2"
 
 # --- Mounting ---
 echo "Mounting filesystems..."
