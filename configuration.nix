@@ -23,6 +23,10 @@
         enableOffloadCmd = lib.mkForce true;
       };
       sync.enable = lib.mkForce false;
+      # nix shell nixpkgs#pciutils -c lspci -D -d ::03xx
+      # https://wiki.nixos.org/wiki/NVIDIA // Conversion required
+      intelBusId = "PCI:0@0:2:0";
+      nvidiaBusId = "PCI:1@0:0:0";
     };
   };
 
