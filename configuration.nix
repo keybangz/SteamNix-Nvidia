@@ -14,6 +14,13 @@
   hardware.nvidia.open = true;
   hardware.nvidia.powerManagement.enable = true;
 
+  hardware.nvidia.prime = {
+    # nix shell nixpkgs#pciutils -c lspci -D -d ::03xx
+    # https://wiki.nixos.org/wiki/NVIDIA // Conversion required
+    intelBusId = "PCI:0@0:2:0";
+    nvidiaBusId = "PCI:1@0:0:0";
+  };
+
   specialisation.laptop-mode.configuration = {
     system.nixos.tags = [ "laptop-mode" ];
 
@@ -23,10 +30,6 @@
         enableOffloadCmd = lib.mkForce true;
       };
       sync.enable = lib.mkForce false;
-      # nix shell nixpkgs#pciutils -c lspci -D -d ::03xx
-      # https://wiki.nixos.org/wiki/NVIDIA // Conversion required
-      intelBusId = "PCI:0@0:2:0";
-      nvidiaBusId = "PCI:1@0:0:0";
     };
   };
 
@@ -39,10 +42,6 @@
         enableOffloadCmd = lib.mkForce false;
       };
       sync.enable = true;
-      # nix shell nixpkgs#pciutils -c lspci -D -d ::03xx
-      # https://wiki.nixos.org/wiki/NVIDIA // Conversion required
-      intelBusId = "PCI:0@0:2:0";
-      nvidiaBusId = "PCI:1@0:0:0";
     };
   };
  
