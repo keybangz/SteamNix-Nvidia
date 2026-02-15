@@ -19,8 +19,8 @@ disk="/dev/${selected_device_name}"
 
 # Verify the selected device is a block device
 if [[ ! -b "$disk" ]]; then
-    echo "Error: '$disk' is not a valid block device or does not exist."
-    exit 1
+  echo "Error: '$disk' is not a valid block device or does not exist."
+  exit 1
 fi
 
 echo "You selected: $disk"
@@ -29,9 +29,9 @@ echo "You selected: $disk"
 # If the disk name ends in a number (like nvme0n1), add 'p' before the partition number.
 # Otherwise (like sda), just append the number.
 if [[ "$selected_device_name" =~ [0-9]$ ]]; then
-    part_prefix="${disk}p"
+  part_prefix="${disk}p"
 else
-    part_prefix="${disk}"
+  part_prefix="${disk}"
 fi
 
 echo "Partition prefix set to: $part_prefix"
@@ -52,7 +52,7 @@ sleep 2
 # --- Filesystems ---
 echo "Formatting filesystems..."
 mkfs.fat -F32 "${part_prefix}1"
-mkfs.btrfs -L nixos "${part_prefix}2"
+mkfs.btrfs -f -L nixos "${part_prefix}2"
 
 # --- Mounting ---
 echo "Mounting filesystems..."
@@ -78,8 +78,8 @@ nix-channel --update
 
 # Generate hardware-configuration.nix
 nixos-generate-config --root /mnt
-curl -L -o /mnt/etc/nixos/configuration.nix 'https://raw.githubusercontent.com/SteamNix/SteamNix/refs/heads/main/configuration.nix'
-curl -L -o /mnt/etc/nixos/flake.nix 'https://raw.githubusercontent.com/SteamNix/SteamNix/refs/heads/main/flake.nix'
+curl -L -o /mnt/etc/nixos/configuration.nix 'https://raw.githubusercontent.com/keybangz/SteamNix-Nvidia/refs/heads/main/configuration.nix'
+curl -L -o /mnt/etc/nixos/flake.nix 'https://raw.githubusercontent.com/keybangz/SteamNix-Nvidia/refs/heads/main/flake.nix'
 
 # --- Installation ---
 echo "Installing NixOS..."
