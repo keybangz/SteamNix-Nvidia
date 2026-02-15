@@ -6,14 +6,17 @@
       ./hardware-configuration.nix
     ];
 
-  hardware.graphics.enable = true;
   services.xserver.videoDrivers = [
-    "modesetting"
-    "nvidia"
+        "modesetting"
+        "nvidia"
   ];
+
+  hardware.graphics.enable = true;
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.beta;
   hardware.nvidia.open = true;
   hardware.nvidia.powerManagement.enable = true;
   hardware.nvidia.forceFullCompositionPipeline = true;
+  hardware.nvidia.modesetting.enable = true;
 
   hardware.nvidia.prime = {
     # nix shell nixpkgs#pciutils -c lspci -D -d ::03xx
@@ -24,6 +27,7 @@
 
   specialisation.laptop-mode.configuration = {
     system.nixos.tags = [ "laptop-mode" ];
+    hardware.nvidia.powerManagement.finegrained = true;
 
     hardware.nvidia.prime = {
       offload = {
@@ -38,13 +42,14 @@
   specialisation.tv-mode.configuration = {
     system.nixos.tags = [ "tv-mode" ];
     boot.kernelParams = [ "module_blacklist=i915" ];
+    hardware.nvidia.powerManagement.finegrained = lib.mkForce false;
 
     hardware.nvidia.prime = {
       offload.enable = lib.mkForce false;
-      reverseSync.enable = lib.mkForce true;
+      sync.enable = lib.mkForce true;
     };
   };
- 
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nixpkgs.config.allowUnfree         = true;
 
@@ -53,8 +58,8 @@
   ####################
   boot.loader.systemd-boot.enable      = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.timeout                  = 0;
-  boot.loader.limine.maxGenerations    = 5;
+  boot.loader.timeout                  = 5;
+  boot.loader.systemd-boot.configurationLimit    = 2;
   hardware.amdgpu.initrd.enable = false;
 
   boot.kernelParams = [ "quiet" "nvidia.NVreg_TemporaryFilePath=/var/tmp" ];
@@ -121,11 +126,12 @@
     steam.enable = true;
     steam.autoStart = true;
     steam.user = "steamos";
-    # hardware.has.amd.gpu = true;
+    hardware.has.amd.gpu = false;
     decky-loader.enable = true;
-    steamos.useSteamOSConfig = true;
+    decky-loader.user = "steamos";
+    steamos.useSteamOSConfig = false;
     steam.desktopSession = "cosmic";
-    
+    devices.steamdeck.enableVendorDrivers = false;
   };
 
 
@@ -137,8 +143,10 @@
   zramSwap.algorithm = "zstd";
   services.desktopManager.cosmic.enable = true;
   services.flatpak.enable = true;
-  
-  
+  services.resolved.enable         = true;
+  services.avahi.enable            = true;
+  services.avahi.nssmdns           = true;
+
   programs = {
     appimage = { enable = true; binfmt = true; };
     fish     = { enable = true; };
@@ -171,6 +179,12 @@
     description  = "SteamOS user";
     extraGroups  = [ "networkmanager" "wheel" "docker" "video" "seat" "audio" "libvirtd"];
     password     = "steamos";
+    packages = with pkgs; [
+        git
+        firefox-esr
+        vacuum-tube
+        discord
+    ];
   };
 
   #################
