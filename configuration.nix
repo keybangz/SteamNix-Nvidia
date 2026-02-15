@@ -6,6 +6,43 @@
       ./hardware-configuration.nix
     ];
 
+  {
+    hardware.graphics.enable = true;
+    services.xserver.videoDrivers = [
+      "modesetting"
+      "nvidia"
+    ];
+    hardware.nvidia.open = true;
+    hardware.nvidia.powerManagement.enable = true;
+  };
+
+  specialisation.laptop-mode.configuration = {
+    system.nixos.tags = [ "laptop-mode" ];
+
+    hardware.nvidia.prime = {
+      offload = {
+        enable = lib.mkForce true;
+        enableOffloadCmd = lib.mkForce true;
+      };
+      sync.enable = lib.mkForce true;
+    };
+  };
+
+  specialisation.tv-mode.configuration = {
+    system.nixos.tags = [ "tv-mode" ];
+
+    hardware.nvidia.prime = {
+      offload = {
+        enable = lib.mkForce true;
+        enableOffloadCmd = lib.mkForce false;
+      };
+      sync.enable = true;
+      # nix shell nixpkgs#pciutils -c lspci -D -d ::03xx
+      # https://wiki.nixos.org/wiki/NVIDIA // Conversion required
+      # intelBusId = "PCI:0@0:2:0";
+      # nvidiaBusId = "PCI:1@0:0:0";
+    };
+  };
  
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nixpkgs.config.allowUnfree         = true;
@@ -19,7 +56,7 @@
   boot.loader.limine.maxGenerations    = 5;
   hardware.amdgpu.initrd.enable = false;
 
-  boot.kernelParams = [ "quiet" ];
+  boot.kernelParams = [ "quiet nvidia.NVreg_TemporaryFilePath=/var/tmp" ];
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernel.sysctl = {
     "kernel.split_lock_mitigate" = 0;
