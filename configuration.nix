@@ -37,6 +37,7 @@
 
   specialisation.tv-mode.configuration = {
     system.nixos.tags = [ "tv-mode" ];
+    boot.kernelParams = [ "module_blacklist=i915" ];
 
     hardware.nvidia.prime = {
       offload.enable = lib.mkForce false;
