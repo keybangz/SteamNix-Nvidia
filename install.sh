@@ -78,8 +78,17 @@ nix-channel --update
 
 # Generate hardware-configuration.nix
 nixos-generate-config --root /mnt
+
+# Download configurations
 curl -L -o /mnt/etc/nixos/configuration.nix 'https://raw.githubusercontent.com/keybangz/SteamNix-Nvidia/refs/heads/main/configuration.nix'
 curl -L -o /mnt/etc/nixos/flake.nix 'https://raw.githubusercontent.com/keybangz/SteamNix-Nvidia/refs/heads/main/flake.nix'
+
+echo "Initializing git repository for flake evaluation..."
+# Flakes require a git repository to track file hashes correctly
+cd /mnt/etc/nixos
+git init
+git add .
+cd -
 
 # --- Installation ---
 echo "Installing NixOS..."
