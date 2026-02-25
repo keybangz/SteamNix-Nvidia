@@ -1,22 +1,39 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, inputs, lib, ... }:
 
 {
   imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  [ # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
+
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nixpkgs.config = {
+    allowUnfree = true;
+  };
 
   services.xserver.videoDrivers = [
-        "modesetting"
         "nvidia"
   ];
 
-  hardware.graphics.enable = true;
-  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.beta;
-  hardware.nvidia.open = true;
-  hardware.nvidia.powerManagement.enable = true;
-  hardware.nvidia.forceFullCompositionPipeline = true;
-  hardware.nvidia.modesetting.enable = true;
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true; 
+  };
+
+  environment.variables.LIBVA_DRIVER_NAME = "nvidia";
+
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = true;
+    powerManagement.finegrained = lib.mkDefault false;
+    dynamicBoost.enable = true;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.beta;
+    forceFullCompositionPipeline = false;
+  };
+
+  boot.kernelModules = ["nvidia_uvm" "nvidia_modeset" "nvidia_drm" "nvidia"];
 
   hardware.nvidia.prime = {
     offload.enable = false;
@@ -30,6 +47,8 @@
 
   specialisation.laptop-mode.configuration = {
     system.nixos.tags = [ "laptop-mode" ];
+    services.xserver.videoDrivers = lib.mkForce [ "modesetting" "nvidia" ];
+
     hardware.nvidia.powerManagement.finegrained = true;
     boot.kernelParams = lib.mkForce [ "quiet" "nvidia.NVreg_TemporaryFilePath=/var/tmp" ];
 
@@ -43,19 +62,6 @@
     };
   };
 
-#   specialisation.tv-mode.configuration = {
-#     system.nixos.tags = [ "tv-mode" ];
-#     boot.kernelParams = [ "module_blacklist=i915" ];
-#     hardware.nvidia.powerManagement.finegrained = lib.mkForce false;
-#
-#     hardware.nvidia.prime = {
-#       offload.enable = lib.mkForce false;
-#       sync.enable = lib.mkForce true;
-#     };
-#   };
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nixpkgs.config.allowUnfree         = true;
 
   ####################
   # Boot & Kernel    #
@@ -64,7 +70,6 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.timeout                  = 5;
   boot.loader.systemd-boot.configurationLimit    = 2;
-  hardware.amdgpu.initrd.enable = false;
 
   boot.kernelParams = [ "quiet" "nvidia.NVreg_TemporaryFilePath=/var/tmp" "module_blacklist=i915" ];
   boot.kernelPackages = pkgs.linuxPackages;
@@ -76,12 +81,15 @@
 
   boot.initrd = {
     systemd.enable   = true;
-    # kernelModules    = [ ];
     verbose          = false;
   };
   boot.plymouth.enable     = true;
   boot.consoleLogLevel     = 0;
   systemd.settings.Manager = {DefaultTimeoutStopSec="5s";};
+
+  systemd = {
+    services.systemd-suspend.environment.SYSTEMD_SLEEP_FREEZE_USER_SESSIONS = "false";
+  };
 
   ################
   # FileSystems  #
@@ -116,28 +124,41 @@
   security.rtkit.enable = true;
   services.pipewire = {
     enable         = true;
-    alsa.enable    = true;
-    alsa.support32Bit = true;
+    alsa.enable    = false;
+    alsa.support32Bit = false;
     pulse.enable   = true;
   };
 
   ########################
   # Graphical & Jovian   #
   ########################
-  services.xserver.enable            = false;
-  #services.logind.extraConfig = ''HandlePowerKey=poweroff''; #set power button to shutdown on press
+  services.xserver.enable            = true;
+
   jovian = {
     steam.enable = true;
     steam.autoStart = true;
     steam.user = "steamos";
-    hardware.has.amd.gpu = false;
+    steam.desktopSession = "plasma";
+
     decky-loader.enable = true;
     decky-loader.user = "steamos";
-    steamos.useSteamOSConfig = false;
-    steam.desktopSession = "cosmic";
+
+    steamos.useSteamOSConfig = true;
+
     devices.steamdeck.enableVendorDrivers = false;
+    hardware.has.amd.gpu = false;
   };
 
+  # Create Steam CEF debugging file if it doesn't exist for Decky Loader. 
+  systemd.services.steam-cef-debug = lib.mkIf config.jovian.decky-loader.enable {
+    description = "Create Steam CEF debugging file";
+    serviceConfig = {
+      Type = "oneshot";
+      User = config.jovian.steam.user;
+      ExecStart = "/bin/sh -c 'mkdir -p ~/.steam/steam && [ ! -f ~/.steam/steam/.cef-enable-remote-debugging ] && touch ~/.steam/steam/.cef-enable-remote-debugging || true'";
+    };
+    wantedBy = [ "multi-user.target" ];
+  };
 
   ########################
   # Programs & Services    #
@@ -145,28 +166,70 @@
   services.automatic-timezoned.enable = true;
   zramSwap.enable = true;
   zramSwap.algorithm = "zstd";
-  services.desktopManager.cosmic.enable = true;
+  services.displayManager.sddm.enable = true;
+  services.displayManager.sddm.wayland.enable = true;
+  services.desktopManager.plasma6.enable = true;
   services.flatpak.enable = true;
   services.resolved.enable         = true;
   services.avahi.enable            = true;
   services.avahi.nssmdns           = true;
 
-  programs = {
-    appimage = { enable = true; binfmt = true; };
-    fish     = { enable = true; };
-    mosh     = { enable = true; };
-    tmux     = { enable = true; };
-     };
-
-  environment.sessionVariables = {
-    PROTON_USE_NTSYNC       = "1";
-    ENABLE_HDR_WSI          = "1";
-    DXVK_HDR                = "1";
-    # PROTON_ENABLE_AMD_AGS   = "1";
-    PROTON_ENABLE_NVAPI     = "1";
-    ENABLE_GAMESCOPE_WSI    = "1";
-    STEAM_MULTIPLE_XWAYLANDS = "1";
+  systemd.services.flatpak-repo = {
+    wantedBy = [ "multi-user.target" ];
+    path = [ pkgs.flatpak ];
+    script = ''
+      flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    '';
   };
+
+  programs = {
+    git.enable = true;
+    appimage.enable = true; 
+    appimage.binfmt = true;
+    tmux.enable = true;
+
+    steam = {
+      package = pkgs.steam.override {
+        extraLibraries = pkgs: [ pkgs.libxcb ];
+        extraPkgs =
+          pkgs: with pkgs; [
+            libxcursor
+            libxi
+            libxinerama
+            libxscrnsaver
+            libpng
+            libpulseaudio
+            libvorbis
+            stdenv.cc.cc.lib
+            libkrb5
+            keyutils
+            gamemode
+          ];
+      };
+
+      extraCompatPackages = [ pkgs.proton-ge-bin ];
+    };
+  };
+
+  environment.systemPackages = with pkgs; [
+    ffmpeg
+    cmake
+    steam-rom-manager
+    python315
+    pipx
+    zenity
+    mesa-demos
+  ];
+
+  # environment.sessionVariables = {
+    # PROTON_USE_NTSYNC       = "1";
+    # ENABLE_HDR_WSI          = "1";
+    # DXVK_HDR                = "1";
+    # PROTON_ENABLE_AMD_AGS   = "1";
+    # PROTON_ENABLE_NVAPI     = "1";
+    # ENABLE_GAMESCOPE_WSI    = "0";
+    # STEAM_MULTIPLE_XWAYLANDS = "1";
+  # };
 
   ###################
   # Virtualization  #
@@ -184,10 +247,7 @@
     extraGroups  = [ "networkmanager" "wheel" "docker" "video" "seat" "audio" "libvirtd"];
     password     = "steamos";
     packages = with pkgs; [
-        git
         firefox-esr
-        vacuum-tube
-        discord
     ];
   };
 
@@ -205,5 +265,5 @@
   ########################
   # System State Version #
   ########################
-  system.stateVersion = "24.11";
+  system.stateVersion = "25.11";
 }
