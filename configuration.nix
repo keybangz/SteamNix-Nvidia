@@ -6,6 +6,10 @@
     ./hardware-configuration.nix
   ];
 
+  nix.nixPath = [
+    "nixos-config=/home/steamos/SteamNix-Nvidia"
+  ];
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nixpkgs.config = {
     allowUnfree = true;
@@ -18,6 +22,7 @@
   hardware.graphics = {
     enable = true;
     enable32Bit = true; 
+    extraPackages = [ pkgs.mesa pkgs.libGL pkgs.libglvnd pkgs.libGLX pkgs.meson ];
   };
 
   environment.variables.LIBVA_DRIVER_NAME = "nvidia";
@@ -124,29 +129,45 @@
   security.rtkit.enable = true;
   services.pipewire = {
     enable         = true;
-    alsa.enable    = false;
-    alsa.support32Bit = false;
+    alsa.enable    = true;
+    alsa.support32Bit = true;
     pulse.enable   = true;
   };
 
   ########################
   # Graphical & Jovian   #
   ########################
-  services.xserver.enable            = true;
+  services.xserver.enable            = false;
+  # xdg.portal = {
+  #  enable = true;
+  # };
+
+    # wlr.enable = false;
+    # extraPortals = with pkgs; [
+    #  xdg-desktop-portal-gtk
+    # ];
+    #config = {
+    #  common = {
+    #    default = [
+    #      "wlr"
+    #    ];
+    #  };
+    # };
+  # };
 
   jovian = {
     steam.enable = true;
     steam.autoStart = true;
     steam.user = "steamos";
-    steam.desktopSession = "plasma";
 
     decky-loader.enable = true;
     decky-loader.user = "steamos";
 
-    steamos.useSteamOSConfig = true;
+    steamos.useSteamOSConfig = false;
 
     devices.steamdeck.enableVendorDrivers = false;
     hardware.has.amd.gpu = false;
+    steam.desktopSession = "cosmic";
   };
 
   # Create Steam CEF debugging file if it doesn't exist for Decky Loader. 
@@ -166,10 +187,11 @@
   services.automatic-timezoned.enable = true;
   zramSwap.enable = true;
   zramSwap.algorithm = "zstd";
-  services.displayManager.sddm.enable = true;
-  services.displayManager.sddm.wayland.enable = true;
-  services.desktopManager.plasma6.enable = true;
+  
+  # services.displayManager.cosmic-greeter.enable = true;
+  services.desktopManager.cosmic.enable = true;
   services.flatpak.enable = true;
+
   services.resolved.enable         = true;
   services.avahi.enable            = true;
   services.avahi.nssmdns           = true;
@@ -189,47 +211,35 @@
     tmux.enable = true;
 
     steam = {
-      package = pkgs.steam.override {
-        extraLibraries = pkgs: [ pkgs.libxcb ];
-        extraPkgs =
-          pkgs: with pkgs; [
-            libxcursor
-            libxi
-            libxinerama
-            libxscrnsaver
-            libpng
-            libpulseaudio
-            libvorbis
-            stdenv.cc.cc.lib
-            libkrb5
-            keyutils
-            gamemode
-          ];
-      };
-
       extraCompatPackages = [ pkgs.proton-ge-bin ];
+    };
+
+    nh = {
+      enable = true;
+      clean.enable = true;
+      clean.extraArgs = "--keep-since 4d --keep 3";
+      flake = "/home/steamos/SteamNix-Nvidia"; # sets NH_OS_FLAKE variable for you
     };
   };
 
   environment.systemPackages = with pkgs; [
     ffmpeg
     cmake
-    steam-rom-manager
     python315
     pipx
     zenity
     mesa-demos
   ];
 
-  # environment.sessionVariables = {
-    # PROTON_USE_NTSYNC       = "1";
+   environment.sessionVariables = {
+    PROTON_USE_NTSYNC       = "1";
     # ENABLE_HDR_WSI          = "1";
     # DXVK_HDR                = "1";
     # PROTON_ENABLE_AMD_AGS   = "1";
-    # PROTON_ENABLE_NVAPI     = "1";
+    PROTON_ENABLE_NVAPI     = "1";
     # ENABLE_GAMESCOPE_WSI    = "0";
-    # STEAM_MULTIPLE_XWAYLANDS = "1";
-  # };
+    STEAM_MULTIPLE_XWAYLANDS = "1";
+   };
 
   ###################
   # Virtualization  #
@@ -248,6 +258,9 @@
     password     = "steamos";
     packages = with pkgs; [
         firefox-esr
+        steam-rom-manager
+        vacuum-tube
+        equicord
     ];
   };
 
