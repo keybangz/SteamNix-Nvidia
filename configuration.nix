@@ -6,10 +6,6 @@
     ./hardware-configuration.nix
   ];
 
-  nix.nixPath = [
-    "nixos-config=/home/steamos/SteamNix-Nvidia"
-  ];
-
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nixpkgs.config = {
     allowUnfree = true;
@@ -138,22 +134,6 @@
   # Graphical & Jovian   #
   ########################
   services.xserver.enable            = false;
-  # xdg.portal = {
-  #  enable = true;
-  # };
-
-    # wlr.enable = false;
-    # extraPortals = with pkgs; [
-    #  xdg-desktop-portal-gtk
-    # ];
-    #config = {
-    #  common = {
-    #    default = [
-    #      "wlr"
-    #    ];
-    #  };
-    # };
-  # };
 
   jovian = {
     steam.enable = true;
@@ -188,7 +168,6 @@
   zramSwap.enable = true;
   zramSwap.algorithm = "zstd";
   
-  # services.displayManager.cosmic-greeter.enable = true;
   services.desktopManager.cosmic.enable = true;
   services.flatpak.enable = true;
 
@@ -218,7 +197,7 @@
       enable = true;
       clean.enable = true;
       clean.extraArgs = "--keep-since 4d --keep 3";
-      flake = "/home/steamos/SteamNix-Nvidia"; # sets NH_OS_FLAKE variable for you
+      flake = "/etc/nixos/flake.nix"; # sets NH_OS_FLAKE variable for you
     };
   };
 
